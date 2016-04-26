@@ -11,6 +11,7 @@ static const char *menu_title = NULL;
 static const char *url = NULL;
 static GtkWidget *openMenuItem = NULL;
 static GtkWidget *copyMenuItem = NULL;
+static GtkStatusIcon *status_icon = NULL;
 
 static void handle_open(GtkStatusIcon *status_icon, gpointer user_data)
 {
@@ -79,6 +80,16 @@ static GtkStatusIcon *create_tray_icon(unsigned char *imageData, unsigned int im
     return tray_icon;
 }
 
+void change_tray_icon(unsigned char *imageData, unsigned int imageDataLen) {
+    GError *error = NULL;
+    GInputStream *stream = g_memory_input_stream_new_from_data(imageData, imageDataLen, NULL);
+    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_stream(stream, NULL, &error);
+    if (error)
+        fprintf(stderr, "Unable to create PixBuf: %s\n", error->message);
+
+    gtk_status_icon_set_from_pixbuf(status_icon, pixbuf);
+}
+
 void set_url(const char* theUrl)
 {
     url = theUrl;
@@ -95,7 +106,7 @@ void native_loop(const char* title, unsigned char *imageData, unsigned int image
     menu_title = title;
 
     gtk_init(&argc, (char***)&argv);
-    create_tray_icon(imageData, imageDataLen);
+    status_icon = create_tray_icon(imageData, imageDataLen);
     gtk_main();
 }
 

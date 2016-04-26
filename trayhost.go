@@ -44,34 +44,53 @@ import (
 */
 import "C"
 
+const MAXICONS = 3
+
 var isExiting bool
 var urlPtr unsafe.Pointer
+var iconPtr *C.uchar
+
+var iconPtrs [MAXICONS]*C.uchar
+var iconLens [MAXICONS]C.uint
 
 // Run the host system's event loop
-func EnterLoop(title string, imageData []byte) {
+func EnterLoop(title string, imagesData [][]byte) {
 	defer C.free(urlPtr)
 
 	cTitle := C.CString(title)
 	defer C.free(unsafe.Pointer(cTitle))
 
-	// Copy the image data into unmanaged memory
-	cImageData := C.malloc(C.size_t(len(imageData)))
-	defer C.free(cImageData)
-	var cImageDataSlice []C.uchar
-	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&cImageDataSlice))
-	sliceHeader.Cap = len(imageData)
-	sliceHeader.Len = len(imageData)
-	sliceHeader.Data = uintptr(cImageData)
+	for index, imageData := range imagesData {
+		// Copy the image data into unmanaged memory
+		cImageData := C.malloc(C.size_t(len(imageData)))
+		defer C.free(cImageData)
+		var cImageDataSlice []C.uchar
+		sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&cImageDataSlice))
+		sliceHeader.Cap = len(imageData)
+		sliceHeader.Len = len(imageData)
+		sliceHeader.Data = uintptr(cImageData)
 
-	for i, v := range imageData {
-		cImageDataSlice[i] = C.uchar(v)
+		for i, v := range imageData {
+			cImageDataSlice[i] = C.uchar(v)
+		}
+		iconPtrs[index] = &cImageDataSlice[0]
+		iconLens[index] = C.uint(len(imageData))
 	}
 
 	// Enter the loop
-	C.native_loop(cTitle, &cImageDataSlice[0], C.uint(len(imageData)))
+	C.native_loop(cTitle, iconPtrs[0], iconLens[0])
 
 	// If reached, user clicked Exit
 	isExiting = true
+}
+
+// Set the URL that the tray icon will open in a browser
+func SetIcon(iconno int) {
+	if isExiting || iconno >= MAXICONS {
+		return
+	}
+
+	C.change_tray_icon(iconPtrs[iconno], iconLens[iconno])
 }
 
 // Set the URL that the tray icon will open in a browser
