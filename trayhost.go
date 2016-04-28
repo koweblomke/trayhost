@@ -89,7 +89,6 @@ func SetIcon(iconno int) {
 	if isExiting || iconno >= MAXICONS {
 		return
 	}
-
 	C.change_tray_icon(iconPtrs[iconno], iconLens[iconno])
 }
 

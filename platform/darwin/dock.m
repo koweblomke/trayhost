@@ -2,7 +2,6 @@
 
 static volatile NSString *strStaticUrl;
 static volatile NSURL *staticUrl;
-//#static volatile NSImage *icon;
 
 @interface AppDelegate: NSObject <NSApplicationDelegate>
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender;
@@ -54,11 +53,11 @@ NSMenu *m_menu;
 void change_tray_icon( unsigned char *imageDataBytes, unsigned int imageDataLen) {
     NSData *imageData = [[[NSData alloc] initWithBytes:imageDataBytes length:imageDataLen] autorelease];
     NSImage *icon = [[[NSImage alloc] initWithData:imageData] autorelease];
+    [imageData release];
 
-    NSDockTile *dockTile = [NSApp dockTile];
-    [[dockTile contentView] setImage: icon];
-//    [dockTile setBadgeLabel:@"10"];
-    [dockTile display];
+    [NSApp setApplicationIconImage:icon];
+    [icon release];
+
 }
 
 
@@ -70,11 +69,7 @@ void native_loop(const char *title, unsigned char *imageDataBytes, unsigned int 
     NSData *imageData = [[[NSData alloc] initWithBytes:imageDataBytes length:imageDataLen] autorelease];
     NSImage *icon = [[[NSImage alloc] initWithData:imageData] autorelease];
 
-    NSImageView *myView = [[NSImageView alloc] init];
-    [myView setImage: icon];
-    [[NSApp dockTile] setContentView: myView];
-
-  //  [NSApp setApplicationIconImage:icon];
+    [NSApp setApplicationIconImage:icon];
 
     AppDelegate *delegate = [[[AppDelegate alloc] init:[NSString stringWithCString:title encoding:NSASCIIStringEncoding]] autorelease];
     [NSApp setDelegate:delegate];
